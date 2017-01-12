@@ -172,14 +172,22 @@ class ViewController: UIViewController {
         
         
         
-        let trie = Trie(key: ["qiangxinyu","enhe","wanghaobin"])
-        let trie1 = trie.insert(key: ["q","e"])
-        print(trie)
-        print(trie1)
+//        let trie = Trie(key: ["qiangxinyu","enhe","wanghaobin"])
+//        let trie1 = trie.insert(key: ["q","e"])
+//        print(trie)
+//        print(trie1)
+//        
+//        print(trie1.elements)
+//        
+//        print(trie1.withPrefix(prefix: ["q"]) ?? "aa")
         
-        print(trie1.elements)
+        let contents = ["cat", "car", "cart", "dog"]
+        let trieOfWords = buildStringTrie(words: contents)
+        let newArr = autocompleteString(knowWords: trieOfWords, word: "car")
         
-        print(trie1.withPrefix(prefix: ["q"]) ?? "aa")
+        print(trieOfWords)
+        print("\n")
+        print(newArr)
     }
     
   
@@ -282,4 +290,20 @@ extension Trie {
         }
         return Trie(isELement: isELement, children: newChildren)
     }
+}
+
+
+func buildStringTrie(words: [String]) -> Trie<Character> {
+    let emptyTrie = Trie<Character>()
+    return words.reduce(emptyTrie, { (trie, word) in
+        trie.insert(key: Array(word.characters))
+    })
+}
+
+func autocompleteString(knowWords: Trie<Character>, word: String) -> [String] {
+    let chars = Array(word.characters)
+    let completed = knowWords.autocomplete(key: chars)
+    return completed.map({ (chars) in
+        word + String(chars)
+    })
 }
