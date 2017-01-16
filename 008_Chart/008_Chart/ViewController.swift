@@ -167,6 +167,81 @@ extension CGRect {
 extension CGRectEdge { var isHorizontal: Bool {
     return self == .maxXEdge || self == .minXEdge; }
 }
+
+class Draw: UIView {
+    let diagram: Diagram
+    
+    init(frame: CGRect, diagram: Diagram) {
+        self.diagram = diagram
+        super.init(frame: frame)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func draw(_ rect: CGRect) {
+        guard let context = UIGraphicsGetCurrentContext() else {
+            return
+        }
+        
+        context.draw(bounds: self.bounds, diagram: diagram)
+    }
+    
+    func data() -> Data {
+        return Data()
+    }
+}
+
+
+extension Diagram {
+    func pdf(width: CGFloat) -> Data {
+        let height = width * (size.height / size.width)
+        let v = Draw(frame: CGRect(x: 0, y: 0, width: width, height: height), diagram: self)
+        return v.data()
+    }
+}
+func rect(width: CGFloat, height: CGFloat) -> Diagram {
+    return .Prim(CGSize(width: width, height: height), .Rectangle)
+}
+func circle( diameter: CGFloat) -> Diagram {
+    return .Prim(CGSize(width: diameter, height: diameter), .Ellipse)
+}
+func text(theText: String, width: CGFloat, height: CGFloat) -> Diagram {
+    return .Prim(CGSize(width: width, height: height), .Text(theText))
+}
+func square(side: CGFloat) -> Diagram {
+    return rect(width: side, height: side)
+}
+
+
+infix operator |||
+func ||| ( l : Diagram, r: Diagram) -> Diagram {
+    return Diagram.Beside(l, r)
+}
+
+infix operator ---
+func --- (l: Diagram,r:Diagram)->Diagram{
+    return Diagram.Below(l, r)
+}
+
+
+extension Diagram {
+    func fill (color: UIColor) -> Diagram {
+        return .Attributed(.FillColor(color), self) }
+    func alignTop() -> Diagram {
+        return .Align(CGVector(dx: 0.5, dy: 1), self)
+    }
+    func alignBottom() -> Diagram {
+        return .Align(CGVector(dx: 0.5, dy: 0), self)
+    }
+}
+
+let empty: Diagram = rect(width: 0, height: 0)
+func hcat(diagrams: [Diagram]) -> Diagram {
+    return diagrams.reduce(empty, |||)
+}
+
 class ViewController: UIViewController {
 
     override func viewDidLoad() {
@@ -174,6 +249,22 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view, typically from a nib.
         
 //        Diagram.Align(CGVector(dx: 0.5, dy: 1), blueSquare) ||| redSquare
+        
+        
+        
+        let blueSquare = square(side:1).fill(color: .blue)
+        let redSquare = square(side:2).fill(color: .red)
+        let greenCircle = circle(diameter: 1).fill (color: .green)
+        
+        _ = (blueSquare ||| redSquare) ||| greenCircle
+        
+        
+        
+        
+        
+        let myView = MyView(frame: view.frame)
+        view.addSubview(myView)
+
     }
 
     override func didReceiveMemoryWarning() {
@@ -182,5 +273,28 @@ class ViewController: UIViewController {
     }
 
     
+}
+
+class MyView: UIView {
+    override func draw(_ rect: CGRect) {
+        if let context = UIGraphicsGetCurrentContext() {
+//            UIColor.blue.setFill()
+//            context.fill(CGRect(x: 0, y: 37, width: 75, height: 75))
+//            
+//            UIColor.red.setFill()
+//            context.fill(CGRect(x: 75, y: 0, width:150, height: 150))
+//            
+//            UIColor.green.setFill()
+//            context.fillEllipse(in: CGRect(x: 225, y: 37, width: 75, height: 75))
+            let blueSquare = square(side:1).fill(color: .blue)
+            let redSquare = square(side:2).fill(color: .red)
+            let greenCircle = circle(diameter: 1).fill (color: .green)
+            
+            let x = (blueSquare ||| redSquare) ||| greenCircle
+            
+            context.draw(bounds: self.bounds, diagram: x)
+            
+        }
+    }
 }
 
